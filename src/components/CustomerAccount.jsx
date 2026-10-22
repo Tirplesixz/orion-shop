@@ -9,6 +9,13 @@ import { useLanguage } from '../i18n'
 
 const emptyAddress = { label: 'Home', recipient: '', phone: '', address: '', city: '', province: '', postalCode: '', country: 'Thailand', isDefault: false }
 
+function AccountFeedback({ error, message }) {
+  return <>
+    <p className="customer-account-error">{error}</p>
+    {message && <p className="customer-account-message">{message}</p>}
+  </>
+}
+
 export default function CustomerAccount() {
   const { language, t } = useLanguage()
   const [open, setOpen] = useState(false)
@@ -68,27 +75,38 @@ export default function CustomerAccount() {
   const removeAccount = (event) => { event.preventDefault(); if (!window.confirm(t('deleteWarning'))) return; run(async () => { await deleteCustomerAccount(form.deletePassword); setAccount(null); setMode('login'); setOpen(false) }) }
   const submitReturn = (event) => { event.preventDefault(); run(async () => { await createReturnRequest({ orderId: returnDraft.order.id, reason: returnDraft.reason, note: returnDraft.note, items: returnDraft.order.items.filter((item) => returnDraft.itemIds.includes(item.id)).map((item) => ({ orderItemId: item.id, quantity: item.quantity })) }); await refresh(); setReturnDraft(null) }) }
 
-  const AuthForm = () => mode === 'forgot' || mode === 'reset' ? <form onSubmit={submitRecovery}>
-    {mode === 'forgot' && <label>{t('email')}<input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>}
-    {mode === 'reset' && <label>{t('newPassword')}<input required minLength="8" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>}
-    <Feedback /><button type="submit" disabled={loading}>{mode === 'forgot' ? t('sendReset') : t('resetPassword')}</button><button className="customer-account-switch" type="button" onClick={() => setMode('login')}>{t('backLogin')}</button>
-  </form> : <form onSubmit={submitAuth}>
-    {mode === 'register' && <><label>{t('fullName')}<input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label><label>{t('phone')}<input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></label></>}
-    <label>{t('email')}<input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label><label>{t('password')}<input required type="password" minLength="8" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
-    <Feedback /><button type="submit" disabled={loading}>{mode === 'register' ? t('register') : t('signIn')}</button>{mode === 'login' && <button className="customer-account-switch" type="button" onClick={() => setMode('forgot')}>{t('forgot')}</button>}<button className="customer-account-switch" type="button" onClick={() => setMode(mode === 'register' ? 'login' : 'register')}>{mode === 'register' ? t('existing') : t('noAccount')}</button>
-  </form>
-
-  function Feedback() { return <><p className="customer-account-error">{error}</p>{message && <p className="customer-account-message">{message}</p>}</> }
-
   return <>
     <button className="customer-account-trigger" type="button" onClick={show}><span aria-hidden="true">♙</span>{t('account')}</button>
     <div className={`customer-account-backdrop ${open ? 'is-open' : ''}`} onMouseDown={(e) => { if (e.target === e.currentTarget) setOpen(false) }}>
       <section className="customer-account-panel" role="dialog" aria-modal="true" aria-label="ORION account">
         <header><div><p>ORION / Client book</p><h2>{mode === 'account' ? t('yourAccount') : mode === 'register' ? t('join') : mode === 'forgot' ? t('forgotTitle') : mode === 'reset' ? t('resetTitle') : t('welcome')}</h2></div><button type="button" onClick={() => setOpen(false)}>{t('close')}</button></header>
-        {loading && !account && mode === 'account' ? <p className="customer-account-loading">Loading...</p> : mode !== 'account' ? <AuthForm /> : <div className="customer-account-content">
+        {loading && !account && mode === 'account' ? <p className="customer-account-loading">Loading...</p> : mode !== 'account' ? (
+          mode === 'forgot' || mode === 'reset' ? (
+            <form onSubmit={submitRecovery}>
+              {mode === 'forgot' && <label>{t('email')}<input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>}
+              {mode === 'reset' && <label>{t('newPassword')}<input required minLength="8" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>}
+              <AccountFeedback error={error} message={message} />
+              <button type="submit" disabled={loading}>{mode === 'forgot' ? t('sendReset') : t('resetPassword')}</button>
+              <button className="customer-account-switch" type="button" onClick={() => setMode('login')}>{t('backLogin')}</button>
+            </form>
+          ) : (
+            <form onSubmit={submitAuth}>
+              {mode === 'register' && <>
+                <label>{t('fullName')}<input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
+                <label>{t('phone')}<input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></label>
+              </>}
+              <label>{t('email')}<input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
+              <label>{t('password')}<input required type="password" minLength="8" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
+              <AccountFeedback error={error} message={message} />
+              <button type="submit" disabled={loading}>{mode === 'register' ? t('register') : t('signIn')}</button>
+              {mode === 'login' && <button className="customer-account-switch" type="button" onClick={() => setMode('forgot')}>{t('forgot')}</button>}
+              <button className="customer-account-switch" type="button" onClick={() => setMode(mode === 'register' ? 'login' : 'register')}>{mode === 'register' ? t('existing') : t('noAccount')}</button>
+            </form>
+          )
+        ) : <div className="customer-account-content">
           <div className="customer-profile"><span>{account.customer.name?.[0]}</span><div><strong>{account.customer.name}</strong><small>{account.customer.email}<br />{account.customer.phone}</small></div><button type="button" onClick={logout}>{t('signOut')}</button></div>
           {!account.customer.emailVerified && <div className="account-verification"><p>{t('unverified')}</p><button type="button" onClick={() => run(async () => { const result = await resendVerification(); if (result.previewUrl) setMessage(result.previewUrl) }, language === 'th' ? 'ส่งอีเมลแล้ว' : 'Verification sent.')}>{t('resend')}</button></div>}
-          <nav className="account-tabs">{['overview', 'profile', 'addresses', 'security', 'orders'].map((item) => <button type="button" className={tab === item ? 'is-active' : ''} onClick={() => setTab(item)} key={item}>{t(item)}</button>)}</nav><Feedback />
+          <nav className="account-tabs">{['overview', 'profile', 'addresses', 'security', 'orders'].map((item) => <button type="button" className={tab === item ? 'is-active' : ''} onClick={() => setTab(item)} key={item}>{t(item)}</button>)}</nav><AccountFeedback error={error} message={message} />
           {tab === 'overview' && <div className="account-overview"><article><strong>{account.orders.length}</strong><span>{t('orders')}</span></article><article><strong>{account.customer.addresses.length}</strong><span>{t('addresses')}</span></article><article><strong>{account.sessions.length}</strong><span>{t('activeSessions')}</span></article></div>}
           {tab === 'profile' && <form className="account-section-form" onSubmit={saveProfile}><label>{t('fullName')}<input required value={form.name || ''} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label><label>{t('email')}<input value={account.customer.email} disabled /></label><label>{t('phone')}<input value={form.phone || ''} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></label><button type="submit">{t('save')}</button></form>}
           {tab === 'addresses' && <div className="account-addresses"><button className="account-add-button" type="button" onClick={() => setAddressDraft({ ...emptyAddress, recipient: account.customer.name, phone: account.customer.phone || '' })}>+ {t('addAddress')}</button>{account.customer.addresses.map((item) => <article key={item.id}><div><strong>{item.label}{item.isDefault ? ' · Default' : ''}</strong><span>{item.recipient} · {item.phone}</span><small>{item.address}, {item.city}, {item.province} {item.postalCode}, {item.country}</small></div><div><button onClick={() => setAddressDraft(item)} type="button">{t('edit')}</button><button onClick={() => removeAddress(item.id)} type="button">{t('delete')}</button></div></article>)}{addressDraft && <form className="account-address-form" onSubmit={saveAddress}>{['label', 'recipient', 'phone', 'address', 'city', 'province', 'postalCode', 'country'].map((field) => <label key={field}>{field === 'recipient' ? t('fullName') : t(field) || field}<input required={!['province'].includes(field)} value={addressDraft[field] || ''} onChange={(e) => setAddressDraft({ ...addressDraft, [field]: e.target.value })} /></label>)}<label className="account-check"><input type="checkbox" checked={addressDraft.isDefault} onChange={(e) => setAddressDraft({ ...addressDraft, isDefault: e.target.checked })} />{t('defaultAddress')}</label><div><button type="submit">{t('save')}</button><button type="button" onClick={() => setAddressDraft(null)}>{t('cancel')}</button></div></form>}</div>}
