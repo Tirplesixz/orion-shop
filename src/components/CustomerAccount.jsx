@@ -83,8 +83,8 @@ export default function CustomerAccount() {
         {loading && !account && mode === 'account' ? <p className="customer-account-loading">Loading...</p> : mode !== 'account' ? (
           mode === 'forgot' || mode === 'reset' ? (
             <form onSubmit={submitRecovery}>
-              {mode === 'forgot' && <label>{t('email')}<input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>}
-              {mode === 'reset' && <label>{t('newPassword')}<input required minLength="8" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>}
+              {mode === 'forgot' && <label htmlFor="customer-recovery-email">{t('email')}<input id="customer-recovery-email" key="customer-recovery-email" name="email" required type="email" autoComplete="email" value={form.email} onChange={(e) => { const val = e.target.value; setForm((prev) => ({ ...prev, email: val })) }} /></label>}
+              {mode === 'reset' && <label htmlFor="customer-reset-password">{t('newPassword')}<input id="customer-reset-password" key="customer-reset-password" name="password" required minLength="8" type="password" autoComplete="new-password" value={form.password} onChange={(e) => { const val = e.target.value; setForm((prev) => ({ ...prev, password: val })) }} /></label>}
               <AccountFeedback error={error} message={message} />
               <button type="submit" disabled={loading}>{mode === 'forgot' ? t('sendReset') : t('resetPassword')}</button>
               <button className="customer-account-switch" type="button" onClick={() => setMode('login')}>{t('backLogin')}</button>
@@ -92,11 +92,11 @@ export default function CustomerAccount() {
           ) : (
             <form onSubmit={submitAuth}>
               {mode === 'register' && <>
-                <label>{t('fullName')}<input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
-                <label>{t('phone')}<input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></label>
+                <label htmlFor="customer-auth-name">{t('fullName')}<input id="customer-auth-name" key="customer-auth-name" name="name" required autoComplete="name" value={form.name} onChange={(e) => { const val = e.target.value; setForm((prev) => ({ ...prev, name: val })) }} /></label>
+                <label htmlFor="customer-auth-phone">{t('phone')}<input id="customer-auth-phone" key="customer-auth-phone" name="phone" autoComplete="tel" value={form.phone} onChange={(e) => { const val = e.target.value; setForm((prev) => ({ ...prev, phone: val })) }} /></label>
               </>}
-              <label>{t('email')}<input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
-              <label>{t('password')}<input required type="password" minLength="8" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
+              <label htmlFor="customer-auth-email">{t('email')}<input id="customer-auth-email" key="customer-auth-email" name="email" required type="email" autoComplete="email" value={form.email} onChange={(e) => { const val = e.target.value; setForm((prev) => ({ ...prev, email: val })) }} /></label>
+              <label htmlFor="customer-auth-password">{t('password')}<input id="customer-auth-password" key="customer-auth-password" name="password" required type="password" minLength="8" autoComplete={mode === 'register' ? 'new-password' : 'current-password'} value={form.password} onChange={(e) => { const val = e.target.value; setForm((prev) => ({ ...prev, password: val })) }} /></label>
               <AccountFeedback error={error} message={message} />
               <button type="submit" disabled={loading}>{mode === 'register' ? t('register') : t('signIn')}</button>
               {mode === 'login' && <button className="customer-account-switch" type="button" onClick={() => setMode('forgot')}>{t('forgot')}</button>}
