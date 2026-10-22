@@ -1,0 +1,41 @@
+{
+  "name": "orion-shop",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "predev": "prisma generate",
+    "dev": "node --env-file-if-exists=.env server/postgres-server.js",
+    "build": "prisma generate && vite build",
+    "preview": "vite preview",
+    "prestart": "prisma generate",
+    "start": "node --env-file-if-exists=.env server/postgres-server.js --production",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma db push",
+    "db:seed": "prisma db seed",
+    "db:studio": "prisma studio"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.10.1",
+    "@prisma/client": "^7.10.1",
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^18.0.8",
+    "express": "^5.3.0",
+    "express-rate-limit": "^8.7.1",
+    "multer": "^2.4.0",
+    "nodemailer": "^10.1.7",
+    "pg": "^8.23.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.1.1",
+    "prisma": "^7.10.1",
+    "vite": "^8.3.0"
+  },
+  "allowScripts": {
+    "prisma@7.10.1": true,
+    "@prisma/engines@7.10.1": true
+  }
+}

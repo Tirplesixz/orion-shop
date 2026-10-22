@@ -1,0 +1,28 @@
+databases:
+  - name: orion-db
+    databaseName: orion_shop
+    user: orion
+    plan: free
+
+services:
+  - type: web
+    name: orion-shop
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build && npx prisma db push && node prisma/seed.js
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: orion-db
+          property: connectionString
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: ORION_ADMIN_PASSWORD
+        value: orion-admin-2026
+      - key: STORE_TAX_RATE
+        value: "0.07"
+      - key: STORE_SHIPPING_FEE
+        value: "120"

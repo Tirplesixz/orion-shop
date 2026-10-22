@@ -1,0 +1,15 @@
+node_modules
+dist
+.env
+.env.*
+!.env.example
+*.local
+*.log
+.DS_Store
+Thumbs.db
+server/data/products.json
+server/data/orders.json
+server/data/inventory.json
+public/media/uploads/*
+!public/media/uploads/.gitkeep
+server/generated/prisma/
