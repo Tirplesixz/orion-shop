@@ -22,7 +22,7 @@ const customerSessionLifetime = 30 * 24 * 60 * 60 * 1000
 const taxRate = Math.max(0, Number(process.env.STORE_TAX_RATE || 0.07))
 const flatShippingFee = Math.max(0, Number(process.env.STORE_SHIPPING_FEE || 120))
 const sessionSecret = process.env.SESSION_SECRET || 'orion-local-development-session-secret'
-const appBaseUrl = (process.env.APP_BASE_URL || `http://127.0.0.1:${port}`).replace(/\/$/, '')
+const appBaseUrl = (process.env.APP_BASE_URL || process.env.RENDER_EXTERNAL_URL || `http://127.0.0.1:${port}`).replace(/\/$/, '')
 if (isProduction && !process.env.SESSION_SECRET) throw new Error('SESSION_SECRET is required in production.')
 
 await mkdir(uploadDirectory, { recursive: true })
@@ -181,6 +181,7 @@ function orderNumber() {
 }
 
 const app = express()
+app.set('trust proxy', 1)
 app.disable('x-powered-by')
 app.use(express.json({ limit: '2mb' }))
 app.use((request, response, next) => {
@@ -194,7 +195,15 @@ app.use('/api', (request, response, next) => {
   const origin = request.get('origin')
   if (!origin) return next()
   try {
-    if (new URL(origin).origin !== new URL(appBaseUrl).origin) return response.status(403).json({ error: 'Cross-origin request rejected.' })
+    const originUrl = new URL(origin)
+    const hostHeader = (request.get('x-forwarded-host') || request.get('host') || '').split(':')[0]
+    const originHost = originUrl.hostname
+    // Allow if origin host matches current request host (same-site on any domain/proxy)
+    if (originHost === hostHeader) return next()
+    if (appBaseUrl && originUrl.origin === new URL(appBaseUrl).origin) return next()
+    if (process.env.RENDER_EXTERNAL_URL && originUrl.origin === new URL(process.env.RENDER_EXTERNAL_URL).origin) return next()
+    if (['localhost', '127.0.0.1'].includes(originHost)) return next()
+    return response.status(403).json({ error: 'Cross-origin request rejected.' })
   } catch { return response.status(403).json({ error: 'Invalid request origin.' }) }
   next()
 })
